@@ -1,0 +1,65 @@
+##  find_correlated_artists(df, tags, artist_num, aname)
+##  evaluate_precision(tags_inc, tags_eval)
+##  calc_prec_for_group(df, tags, artist_num, aname)
+##  calc_avg_prec_for_sample(df, tags, sample_size, aname)
+
+
+
+def find_correlated_artists(df, tags, artist_num, aname):
+    try:
+        tags_art = tags.loc[tags['artist'] == aname.to_dict()['artist'][int(artist_num)]]['tags'].values.item().replace(' ','').split(',')
+    except ValueError:
+        print('There are no tags for artist. Skip')
+        return [], 0
+    print('Find correlation for group:', aname.to_dict()['artist'][int(artist_num)])
+    print('Tags for group:', tags_art)
+    resdf = pd.DataFrame(columns = ['artist_id', 'artist_name', 'correlation', 'tags'])
+    corr = dict(df.corrwith(df[str(artist_num)]).dropna().sort_values(ascending=False).head(10))
+    cnt = 0
+    for k in corr:
+        cnt += 1
+        artist = aname.to_dict()['artist'][int(k)]
+        tgs = list(tags.loc[tags['artist'] == artist]['tags'].values)
+        if len(tgs) > 0:
+            resdf.loc[len(resdf)] = [k, artist, corr[k], ''.join(tags.loc[tags['artist'] == artist]['tags'].values)]
+        if cnt > 5:
+            break
+    return tags_art, resdf
+
+
+def evaluate_precision(tags_inc, tags_eval):
+    rstring = tags_eval.replace(',','').replace(' ', '')
+    for tag in tags_inc:
+        if rstring.find(tag) > -1:
+            return 1
+    return 0
+
+
+def calc_prec_for_group(df, tags, artist_num, aname):
+    tags_inc, rdf = find_correlated_artists(df, tags, artist_num, aname)
+    if len(tags_inc) == 0 or len(rdf) == 0:
+        return -1
+    prec_list = []
+    for index, row in rdf.iterrows():
+        prec_list.append(evaluate_precision(list(tags_inc), row['tags']))
+    return round(sum(prec_list)/len(prec_list), 2)
+
+
+def calc_avg_prec_for_sample(df, tags, sample_size, aname):
+    pool = []
+    get_index = random.sample(list(tags.artist_id), sample_size)
+    print('picked indexes:',get_index)
+    for ind in get_index:
+        try:
+            res = calc_prec_for_group(df, tags, ind, aname)
+            if res > -1:
+                pool.append(res)
+        except Exception:
+            print('Error occured on ind', ind)
+            continue
+    prec = round(sum(pool)/len(pool), 2)
+    print('============================\n============================')
+    print('total sample size', len(pool))
+    print('precision on sample:', prec)
+
+
