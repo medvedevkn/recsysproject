@@ -1,7 +1,4 @@
-import requests
-import json
-import pandas as pd
-import tqdm
+import utils
 
 #   lastfm_get(payload)
 #   get_artist_tags(artists, tag_num)

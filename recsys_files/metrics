@@ -3,7 +3,7 @@
 ##  calc_prec_for_group(df, tags, artist_num, aname)
 ##  calc_avg_prec_for_sample(df, tags, sample_size, aname)
 
-
+import utils
 
 def find_correlated_artists(df, tags, artist_num, aname):
     try:
